@@ -111,7 +111,7 @@ python3 serial_port_control_gripper_f100.py
 python3 6D_mouse_serial_port_control_fusion.py
 ```
 
-**Note: After the program starts, first press and hold the left button (button 1) to move the robot arm to the preset initial point, and then perform other operations. **
+**Note: After the program starts, first press and hold the left button (button 1) to move the robot arm to the preset initial point, and then perform other operations.**
 
 ### Method 2: Socket control
 
