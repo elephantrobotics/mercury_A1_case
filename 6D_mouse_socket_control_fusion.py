@@ -55,23 +55,12 @@ DIRECTION_MAPPING = {
 }
 
 
-# def led_flash_loop():
-#     """LED灯闪烁提示速度调节模式"""
-#     global led_flash
-#     while True:
-#         if led_flash:
-#             mc.set_color(255, 0, 0)  # 红色
-#             time.sleep(0.5)
-#             mc.set_color(0, 0, 0)    # 熄灭
-#             time.sleep(0.5)
-#         else:
-#             time.sleep(1)
 def led_flash_loop():
     """LED灯闪烁提示速度调节模式"""
     last_led_state = None
     while True:
         if led_flash:
-            mc.set_color(128, 0, 128)  # 红色
+            mc.set_color(128, 0, 128)  # 紫色
             time.sleep(0.5)
             if not led_flash:  # 防止在 sleep 期间被切换模式
                 continue

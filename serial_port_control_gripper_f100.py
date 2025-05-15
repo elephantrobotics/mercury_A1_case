@@ -58,7 +58,7 @@ def led_flash_loop():
     last_led_state = None
     while True:
         if led_flash:
-            mc.set_color(128, 0, 128)  # 红色
+            mc.set_color(128, 0, 128)  # 紫色
             time.sleep(0.5)
             if not led_flash:  # 防止在 sleep 期间被切换模式
                 continue
