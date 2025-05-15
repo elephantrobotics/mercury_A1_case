@@ -1,9 +1,12 @@
+import threading
+
+import numpy as np
 import pygame
 import time
-from pymycobot import MercurySocket
+from pymycobot.mercury import Mercury
 
-# 初始化机械臂,IP和端口号需根据实际进行修改
-mc = MercurySocket('192.168.1.4', 9001)
+# 初始化机械臂
+mc = Mercury('COM24', 115200)
 
 # 检测机械臂是否上电
 if mc.is_power_on() != 1:
@@ -12,7 +15,7 @@ if mc.is_power_on() != 1:
 # 设置夹爪透传模式
 mc.set_gripper_mode(0)
 
-THRESHOLD = 0.7  # 鼠标轴触发运动的阈值
+THRESHOLD = 0.5  # 鼠标轴触发运动的阈值
 DEAD_ZONE = 0.05  # 归零判断阈值
 
 # jog 坐标运动速度
@@ -36,8 +39,8 @@ AXIS_MAPPING = {
     0: 2,
     1: 1,
     2: 3,
-    3: 4,
-    4: 5,
+    3: 5,
+    4: 4,
     5: 6
 }
 
@@ -47,11 +50,22 @@ DIRECTION_MAPPING = {
     1: (-1, 1),  # 轴1 (X) -> 负向 -1，正向 1
     2: (-1, 1),  # 轴2 (Z) -> 负向 -1，正向 1
     3: (-1, 1),  # 轴3 (RX) -> 负向 -1，正向 1
-    4: (1, -1),  # 轴4 (RY) -> 负向 1，正向 -1
-    5: (1, -1)  # 轴5 (RZ) -> 负向 1，正向 -1
+    4: (-1, 1),  # 轴4 (RY) -> 负向 1，正向 -1
+    5: (-1, 1)  # 轴5 (RZ) -> 负向 1，正向 -1
 }
 
 
+# def led_flash_loop():
+#     """LED灯闪烁提示速度调节模式"""
+#     global led_flash
+#     while True:
+#         if led_flash:
+#             mc.set_color(255, 0, 0)  # 红色
+#             time.sleep(0.5)
+#             mc.set_color(0, 0, 0)    # 熄灭
+#             time.sleep(0.5)
+#         else:
+#             time.sleep(1)
 def led_flash_loop():
     """LED灯闪烁提示速度调节模式"""
     last_led_state = None
@@ -94,6 +108,9 @@ def handle_mouse_event(jog_callback, stop_callback, gripper_callback):
     btn1_press_time = None
     speed_mode_hold_time = 1  # 长按1秒进入速度调节模式
 
+    axis = [0, 0, 0, 0, 0, 0]
+    dir = [0, 0, 0, 0, 0, 0]
+
     global jog_speed
 
     try:
@@ -103,22 +120,52 @@ def handle_mouse_event(jog_callback, stop_callback, gripper_callback):
                 if event.type == pygame.JOYAXISMOTION:
                     axis_id = event.axis
                     value = event.value
+                    # print('axis_id:', axis_id)
+                    # print('value:', value)
 
                     if axis_id in AXIS_MAPPING:
                         coord_id = AXIS_MAPPING[axis_id]
                         pos_dir, neg_dir = DIRECTION_MAPPING[axis_id]
 
-                        if value > THRESHOLD and active_axes.get(axis_id) != 1:
-                            jog_callback(coord_id, pos_dir)
+                        if abs(value) > THRESHOLD and active_axes.get(axis_id) != 1:
+                            axis[coord_id - 1] = 1
+                            if (pos_dir * np.sign(value)) > 0:
+                                dir[coord_id - 1] = 1
+                            else:
+                                dir[coord_id - 1] = 0
+
+                            # print("axis_id", coord_id, value, pos_dir)
+                            print(axis)
+                            print(dir)
+
+                            jog_callback(axis, dir)
                             active_axes[axis_id] = 1
 
-                        elif value < -THRESHOLD and active_axes.get(axis_id) != -1:
-                            jog_callback(coord_id, neg_dir)
-                            active_axes[axis_id] = -1
-
                         elif -DEAD_ZONE < value < DEAD_ZONE and axis_id in active_axes:
-                            stop_callback(coord_id)
-                            del active_axes[axis_id]
+                            axis[coord_id - 1] = 0
+                            if np.sum(axis) == 0:
+                                print("stop")
+                                stop_callback(coord_id)
+                                axis = [0, 0, 0, 0, 0, 0]
+                                dir = [0, 0, 0, 0, 0, 0]
+                                del active_axes[axis_id]
+                        # if value > THRESHOLD and active_axes.get(axis_id) != 1:
+                        #     jog_callback(coord_id, pos_dir)
+                        #     active_axes[axis_id] = 1
+                        #     print('axis_id000:', axis_id)
+                        #     print('value000:', value)
+                        #
+                        # elif value < -THRESHOLD and active_axes.get(axis_id) != -1:
+                        #     jog_callback(coord_id, neg_dir)
+                        #     active_axes[axis_id] = -1
+                        #     print('axis_id111:', axis_id)
+                        #     print('value111:', value)
+                        #
+                        # elif -DEAD_ZONE < value < DEAD_ZONE and axis_id in active_axes:
+                        #     stop_callback(coord_id)
+                        #     del active_axes[axis_id]
+                        #     print('axis_id222:', axis_id)
+                        #     print('value222:', value)
 
                 # 处理按键（按钮 0 回到初始点，按钮 1 控制夹爪）
                 # elif event.type == pygame.JOYBUTTONDOWN:
@@ -156,9 +203,10 @@ def handle_mouse_event(jog_callback, stop_callback, gripper_callback):
                             else:
                                 print(">>> 退出速度调节模式 <<<")
                                 mc.set_color(0, 255, 0)  # 恢复绿色常亮
+                            # print(">>> 进入速度调节模式 <<<" if in_speed_mode else ">>> 退出速度调节模式 <<<")
                         else:
                             if in_speed_mode:
-                                jog_speed = min(50, jog_speed + 10)
+                                jog_speed = min(30, jog_speed + 10)
                                 print(f"加速，当前速度：{jog_speed}")
                             else:
                                 gripper_callback()
@@ -173,20 +221,11 @@ def handle_mouse_event(jog_callback, stop_callback, gripper_callback):
 
 
 # 定义回调函数
-def jog_callback(coord_id, direction):
+def jog_callback(axis, dir):
     """触发机械臂JOG坐标运动"""
-    print(f"机械臂 {coord_id} 方向 {'正向' if direction == 1 else '负向'} 运动 - 速度: {jog_speed}")
-    if direction != 1:
-        direction = 0
-    if coord_id in [1, 2, 3]:
-        mc.jog_coord(coord_id, direction, jog_speed, _async=True)
-    else:
-        model = [2, 1, 3]
-        model_dir = [0, 1, 1]
-        model_id = model[coord_id - 4]
-        model_dire = direction ^ model_dir[coord_id - 4]
-        mc.jog_rpy(model_id, model_dire, jog_speed, _async=True)
-
+    global jog_speed
+    print("jog_speed", jog_speed, 'axis', axis, 'dir', dir)
+    mc.jog_coord_fusion(axis, dir, jog_speed)
 
 def stop_callback(coord_id):
     """停止机械臂运动"""
@@ -199,13 +238,17 @@ def gripper_callback():
     global gripper_state
     gripper_state = not gripper_state
     flag = 1 if gripper_state else 0
-    # print(f"夹爪 {'关闭' if flag else '打开'}")
+    print(f"夹爪 {'关闭' if flag else '打开'}")
     mc.set_gripper_state(flag, gripper_speed)
+    # if gripper_state:
+    #     mc.set_pro_gripper_open(14)
+    # else:
+    #     mc.set_pro_gripper_close(14)
 
 
 def home_callback():
     """回到初始点"""
-    mc.send_angles([0, 0, 0, -90, 0, 90, 0], home_speed, _async=True)
+    mc.send_angles([0, 0, 0, -90, 0, 90, 40], home_speed, _async=True)
 
 
 def home_stop_callback():
@@ -213,8 +256,14 @@ def home_stop_callback():
     mc.stop(1)
     print("停止运动")
 
+#鼠标控制线程
+def mouse():
+    handle_mouse_event(jog_callback, stop_callback, gripper_callback)
+
 
 if __name__ == '__main__':
     threading.Thread(target=led_flash_loop, daemon=True).start()
     # 启动监听
-    handle_mouse_event(jog_callback, stop_callback, gripper_callback)
+    # handle_mouse_event(jog_callback, stop_callback, gripper_callback)
+    mouse_thread = threading.Thread(target=mouse)
+    mouse_thread.start()

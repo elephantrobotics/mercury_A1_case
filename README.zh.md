@@ -6,7 +6,7 @@
 
 **适用机型：** Mercury A1。
 
-**末端执行器：** MyCobot Pro 自适应夹爪
+**末端执行器：** MyCobot Pro 自适应夹爪、myGripper F100 力控夹爪
 
 ## 摆放位置
 
@@ -51,6 +51,30 @@
   
 - **按钮2：** 右侧按钮，点击按钮，控制夹爪的张开或者闭合。
 
+
+## 脚本说明
+
+**非轨迹融合模式脚本:**
+
+  - 6D_mouse_serial_serial_port_control.py
+  - 6D_mouse_serial_socket_control.py
+  - serial_port_control_gripper_f100.py
+  - socket_control_gripper_f100.py
+  
+**轨迹融合模式脚本（支持多维方向同时运动）:**
+
+  - 6D_mouse_serial_serial_port_control_fusion.py
+  - 6D_mouse_socket_control_fusion.py
+
+## 按钮速度切换
+
+程序启动后
+
+**进入速度切换模式：** 长按 右侧按钮（**按钮2**） `1`秒松开，进入速度切换模式，此时末端LED灯板闪烁紫色。加速请点击 右侧按钮（**按钮2**），减速请点击 左侧按钮（**按钮1**）； 考虑到鼠标操作灵敏度较高，为降低高速运动引发机械臂碰撞的风险，非轨迹融合模式下最大切换速度设为 50，轨迹融合模式下则限制为 30
+
+**退出速度切换模式：** 长按 右侧按钮（**按钮2**） `1`秒松开，退出速度切换模式，此时末端LED灯板变回绿色。
+
+
 ## 使用方式
 
 >> 注意：使用之前，请打开鼠标的电源开关。
@@ -61,6 +85,8 @@
 pip install pygame
 ```
 
+**注意：** 若使用**轨迹融合模式**程序，需烧录 `MouseControl_v1.0.42.bin` 固件、安装`mercury_A1_case`文件夹下的pymycobot库版本 `pip install pymycobot-3.9.8b1-py3-none-any.whl`
+
 下载代码: https://github.com/elephantrobotics/mercury_A1_case
 
 **这里使用机械臂的通信方式有串口控制和socket控制两种，将鼠标的蓝牙接收器连接到电脑或者机器系统。**
@@ -69,9 +95,24 @@ pip install pygame
 
 打开终端，切换路径到 `mercury_A1_case` 文件夹，运行程序即可：
 
+- 非轨迹融合-自适应夹爪
+
 ```python
-python3 6D_mouse_serial_serial_port_control.py
+python3 6D_mouse_serial_port_control.py
 ```
+
+- 非轨迹融合-力控夹爪
+
+```python
+python3 serial_port_control_gripper_f100.py
+```
+
+- 轨迹融合-自适应夹爪
+
+```python
+python3 6D_mouse_serial_port_control_fusion.py
+```
+
 
 **注意：程序启动后，首先要长按左侧按钮（按钮1）将机械臂移动到预设的初始点位，然后再进行其他操作。**
 
@@ -117,13 +158,28 @@ mc = MercurySocket('192.168.1.4', 9000)
 
 然后运行程序即可。
 
+- 非轨迹融合-自适应夹爪
+
 ```python
-python3 6D_mouse_serial_socket_control.py
+python3 6D_mouse_socket_control.py
 ```
+
+- 非轨迹融合-力控夹爪
+
+```python
+python3 socket_control_gripper_f100.py
+```
+
+ - 轨迹融合-自适应夹爪
+
+```python
+python3 6D_mouse_socket_control_fusion.py
+```
+
 
 **注意：程序启动后，首先要长按左侧按钮（按钮1）将机械臂移动到预设的初始点位，然后再进行其他操作。**
 
-### 修改速度
+### 脚本修改速度
 
 可根据需要自行修改机械臂的JOG坐标运动速度、夹爪的速度和初始点运动速度。在文件的开头进行修改，具体如下：
 

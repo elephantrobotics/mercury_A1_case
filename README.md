@@ -51,6 +51,28 @@ The controller cap is the heart of the SpaceMouse Wireless. Its Six-Degrees-of-F
 
 - **Button 2:** The button on the right. Click the button to control the opening or closing of the gripper.
 
+## Script description
+
+**Non-trajectory fusion mode script:**
+
+- 6D_mouse_serial_port_control.py
+- 6D_mouse_socket_control.py
+- serial_port_control_gripper_f100.py
+- socket_control_gripper_f100.py
+
+**Trajectory fusion mode script (supports multi-dimensional simultaneous movement):**
+
+- 6D_mouse_serial_port_control_fusion.py
+- 6D_mouse_socket_control_fusion.py
+
+## Button speed switching
+
+After the program is started
+
+**Enter speed switching mode:** Press and hold the right button (**Button 2**) for `1` second and release to enter speed switching mode. The LED panel at the end will flash purple. Please click the right button (**Button 2**) to accelerate, and click the left button (**Button 1**) to decelerate; Considering the high sensitivity of mouse operation, in order to reduce the risk of robot arm collision caused by high-speed movement, the maximum switching speed is set to 50 in non-track fusion mode and limited to 30 in track fusion mode
+
+**Exit speed switching mode:** Press and hold the right button (**Button 2**) for `1` second and release to exit speed switching mode. The LED panel at the end will turn back to green.
+
 ## Usage
 
 >> Note: Before use, please turn on the power switch of the mouse.
@@ -61,6 +83,8 @@ The controller cap is the heart of the SpaceMouse Wireless. Its Six-Degrees-of-F
 pip install pygame
 ```
 
+**Note:** If you use the **Trajectory Fusion Mode** program, you need to burn the `MouseControl_v1.0.42.bin` firmware and install the pymycobot library version in the `mercury_A1_case` folder `pip install pymycobot-3.9.8b1-py3-none-any.whl`
+
 Download code: https://github.com/elephantrobotics/mercury_A1_case
 
 **The communication methods used here for the robot arm are serial port control and socket control. Connect the Bluetooth receiver of the mouse to the computer or machine system.**
@@ -69,8 +93,22 @@ Download code: https://github.com/elephantrobotics/mercury_A1_case
 
 Open the terminal, switch the path to the `mercury_A1_case` folder, and run the program:
 
+- Non-trajectory fusion-adaptive gripper
+
 ```python
-python3 6D_mouse_serial_serial_port_control.py
+python3 6D_mouse_serial_port_control.py
+```
+
+- Non-trajectory fusion-force control gripper
+
+```python
+python3 serial_port_control_gripper_f100.py
+```
+
+- Trajectory fusion-adaptive gripper
+
+```python
+python3 6D_mouse_serial_port_control_fusion.py
 ```
 
 **Note: After the program starts, first press and hold the left button (button 1) to move the robot arm to the preset initial point, and then perform other operations. **
@@ -116,8 +154,22 @@ mc = MercurySocket('192.168.1.4', 9000)
 
 Then run the program.
 
+- Non-trajectory fusion-adaptive gripper
+
 ```python
-python3 6D_mouse_serial_socket_control.py
+python3 6D_mouse_socket_control.py
+```
+
+- Non-trajectory fusion-force control gripper
+
+```python
+python3 socket_control_gripper_f100.py
+```
+
+- Trajectory fusion-adaptive gripper
+
+```python
+python3 6D_mouse_socket_control_fusion.py
 ```
 
 **Note: After the program starts, first press and hold the left button (button 1) to move the robot arm to the preset initial point, and then perform other operations.**

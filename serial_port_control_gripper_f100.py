@@ -1,9 +1,11 @@
+import threading
+
 import pygame
 import time
-from pymycobot import MercurySocket
+from pymycobot.mercury import Mercury
 
-# 初始化机械臂,IP和端口号需根据实际进行修改
-mc = MercurySocket('192.168.1.4', 9001)
+# 初始化机械臂
+mc = Mercury('COM24', 115200)
 
 # 检测机械臂是否上电
 if mc.is_power_on() != 1:
@@ -50,7 +52,6 @@ DIRECTION_MAPPING = {
     4: (1, -1),  # 轴4 (RY) -> 负向 1，正向 -1
     5: (1, -1)  # 轴5 (RZ) -> 负向 1，正向 -1
 }
-
 
 def led_flash_loop():
     """LED灯闪烁提示速度调节模式"""
@@ -199,13 +200,16 @@ def gripper_callback():
     global gripper_state
     gripper_state = not gripper_state
     flag = 1 if gripper_state else 0
-    # print(f"夹爪 {'关闭' if flag else '打开'}")
-    mc.set_gripper_state(flag, gripper_speed)
-
+    print(f"夹爪 {'关闭' if flag else '打开'}")
+    # mc.set_gripper_state(flag, gripper_speed)
+    if gripper_state:
+        mc.set_pro_gripper_open(14)
+    else:
+        mc.set_pro_gripper_close(14)
 
 def home_callback():
     """回到初始点"""
-    mc.send_angles([0, 0, 0, -90, 0, 90, 0], home_speed, _async=True)
+    mc.send_angles([0, 0, 0, -90, 0, 90, 40], home_speed, _async=True)
 
 
 def home_stop_callback():
