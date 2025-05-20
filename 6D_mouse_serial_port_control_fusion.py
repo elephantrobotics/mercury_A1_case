@@ -6,7 +6,7 @@ import time
 from pymycobot.mercury import Mercury
 
 # 初始化机械臂
-mc = Mercury('COM24', 115200)
+mc = Mercury('/dev/ttyAMA1', 115200)
 
 # 检测机械臂是否上电
 if mc.is_power_on() != 1:
